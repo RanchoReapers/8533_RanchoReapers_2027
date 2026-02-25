@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -12,6 +14,8 @@ import java.util.function.BooleanSupplier;
 public class LimelightDetectionSubSystem extends SubsystemBase{
 
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry pipelineEntry = table.getEntry("pipeline");
+    
     double tx = table.getEntry("tx").getDouble(0.0);
     double ty = table.getEntry("ty").getDouble(0.0);
     double ta = table.getEntry("ta").getDouble(0.0);
@@ -20,6 +24,13 @@ public class LimelightDetectionSubSystem extends SubsystemBase{
 
     boolean aimAssistActive = false;
     boolean limelightOverride = false;
+    
+    // Current pipeline (0 = AprilTag, 1 = Neural Detector)
+    int currentPipeline = LimelightConstants.kAprilTagPipeline;
+    
+    // Neural detector data
+    int detectedBallCount = 0;
+    double[] neuralDetections = new double[0];
 
     double[] botpose = table.getEntry("botpose").getDoubleArray(new double[0]);
     double[] testTable = {1,2,3,4,5,6};
@@ -42,6 +53,56 @@ public class LimelightDetectionSubSystem extends SubsystemBase{
         limelightOverride = !limelightOverride;
         return new InstantCommand();
     }
+    
+    /**
+     * Switch to AprilTag pipeline (pipeline 0)
+     */
+    public void switchToAprilTagPipeline() {
+        currentPipeline = LimelightConstants.kAprilTagPipeline;
+        pipelineEntry.setNumber(currentPipeline);
+    }
+    
+    /**
+     * Switch to Neural Detector pipeline (pipeline 1)
+     */
+    public void switchToNeuralDetectorPipeline() {
+        currentPipeline = LimelightConstants.kNeuralDetectorPipeline;
+        pipelineEntry.setNumber(currentPipeline);
+    }
+    
+    /**
+     * Toggle between AprilTag and Neural Detector pipelines
+     */
+    public Command togglePipeline() {
+        return new InstantCommand(() -> {
+            if (currentPipeline == LimelightConstants.kAprilTagPipeline) {
+                switchToNeuralDetectorPipeline();
+            } else {
+                switchToAprilTagPipeline();
+            }
+        });
+    }
+    
+    /**
+     * Get current pipeline index
+     */
+    public int getCurrentPipeline() {
+        return currentPipeline;
+    }
+    
+    /**
+     * Check if currently using AprilTag pipeline
+     */
+    public boolean isAprilTagPipeline() {
+        return currentPipeline == LimelightConstants.kAprilTagPipeline;
+    }
+    
+    /**
+     * Check if currently using Neural Detector pipeline
+     */
+    public boolean isNeuralDetectorPipeline() {
+        return currentPipeline == LimelightConstants.kNeuralDetectorPipeline;
+    }
   
     public void updateLimelightData() {
         tx = -table.getEntry("tx").getDouble(0.0);
@@ -51,10 +112,54 @@ public class LimelightDetectionSubSystem extends SubsystemBase{
         botpose = table.getEntry("botpose").getDoubleArray(new double[0]);
         tagsInView = testTable[3];
         tagAveDistance = testTable[5];
+        
+        // Update neural detector data if on neural pipeline
+        if (isNeuralDetectorPipeline()) {
+            updateNeuralDetectorData();
+        }
+    }
+    
+    /**
+     * Update neural detector data and count detected balls
+     */
+    private void updateNeuralDetectorData() {
+        // Neural detector outputs detections in tclass array
+        // Format: [classID, confidence, tx, ty, ta, ...]
+        neuralDetections = table.getEntry("tclass").getDoubleArray(new double[0]);
+        
+        // Count balls (class ID 0) with sufficient confidence
+        detectedBallCount = 0;
+        for (int i = 0; i < neuralDetections.length; i += 6) {  // Each detection has 6 values
+            if (i + 1 < neuralDetections.length) {
+                double classID = neuralDetections[i];
+                double confidence = neuralDetections[i + 1];
+                
+                if (classID == LimelightConstants.kFuelClassID && 
+                    confidence >= LimelightConstants.kMinDetectionConfidence) {
+                    detectedBallCount++;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get the number of balls detected by the neural detector
+     * @return Number of balls detected in the hopper
+     */
+    public int getDetectedBallCount() {
+        return detectedBallCount;
     }
 
     public void aimAssist() {
         updateLimelightData();
+
+        // Only do aim assist in teleop mode and with AprilTag pipeline
+        if (!DriverStation.isTeleop() || !isAprilTagPipeline()) {
+            aimAssistActive = false;
+            xSpeedLimelight = 0;
+            ySpeedLimelight = 0;
+            return;
+        }
 
         // Check if we have a valid target ID (10 or 26)
         boolean validTarget = (tid == 10 || tid == 26);
@@ -151,6 +256,9 @@ public class LimelightDetectionSubSystem extends SubsystemBase{
         SmartDashboard.putBoolean("aimAssistActive", aimAssistActive);
         SmartDashboard.putNumber("DistanceToTarget", distanceToTargetInches);
         SmartDashboard.putNumber("TargetDistance", LimelightConstants.kTargetDistanceInches);
+        SmartDashboard.putNumber("CurrentPipeline", currentPipeline);
+        SmartDashboard.putString("PipelineMode", isAprilTagPipeline() ? "AprilTag" : "Neural");
+        SmartDashboard.putNumber("DetectedBallCount", detectedBallCount);
     }
 
 }

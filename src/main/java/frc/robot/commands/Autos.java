@@ -9,7 +9,9 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.Constants.LimelightConstants;
 import frc.robot.subsystems.IntakeSubSystem;
+import frc.robot.subsystems.LimelightDetectionSubSystem;
 import frc.robot.subsystems.ShooterSubSystem;
 import frc.robot.subsystems.SwerveSubSystem;
 import frc.robot.subsystems.IntakeRetractorSubSystem;
@@ -20,15 +22,17 @@ public final class Autos {
     private final IntakeSubSystem intakeSubsystem;
     private final ShooterSubSystem shooterSubsystem;
     private final IntakeRetractorSubSystem intakeRetractorSubsystem;
+    private final LimelightDetectionSubSystem limelightSubsystem;
 
     private final AutoFactory autoFactory;
     private final AutoChooser autonomousProgramChooser;
 
-    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, ShooterSubSystem shooterSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem) {
+    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, ShooterSubSystem shooterSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem, LimelightDetectionSubSystem limelightSubsystem) {
         this.swerveSubSystem = swerveSubSystem;
         this.intakeSubsystem = intakeSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.intakeRetractorSubsystem = intakeRetractorSubsystem;
+        this.limelightSubsystem = limelightSubsystem;
 
         this.autoFactory = swerveSubSystem.createAutoFactory();
         this.autonomousProgramChooser = new AutoChooser();
@@ -37,8 +41,39 @@ public final class Autos {
                 .bind("activateIntake", intakeSubsystem.doIntakeCmd())
                 .bind("deactivateIntake", intakeSubsystem.stopIntakeCmd())
                 .bind("activateShooter", shooterSubsystem.doShootCmd())
-                .bind("deactivateShooter", shooterSubsystem.stopShootCmd());
+                .bind("deactivateShooter", shooterSubsystem.stopShootCmd())
+                .bind("switchToNeuralPipeline", Commands.runOnce(() -> limelightSubsystem.switchToNeuralDetectorPipeline()))
+                .bind("switchToAprilTagPipeline", Commands.runOnce(() -> limelightSubsystem.switchToAprilTagPipeline()))
+                .bind("smartShootWait", createSmartShootingWaitCommand());
 
+    }
+    
+    /**
+     * Creates a smart shooting wait command that monitors ball count during auto shooting.
+     * This command:
+     * - Switches to neural pipeline briefly to check ball count
+     * - Returns immediately if ball count is sufficient
+     * - Waits longer if ball count is low (<=2 balls)
+     * - Has a maximum wait time of 5 seconds total
+     */
+    private Command createSmartShootingWaitCommand() {
+        return Commands.sequence(
+            // Switch to neural pipeline
+            Commands.runOnce(() -> limelightSubsystem.switchToNeuralDetectorPipeline()),
+            Commands.waitSeconds(0.2),  // Brief wait for pipeline switch and detection
+            
+            // Check ball count and wait accordingly
+            Commands.either(
+                // Low ball count: wait extra second (max total 5s from shooting start)
+                Commands.waitSeconds(LimelightConstants.kExtraShootingTime),
+                // Good ball count: no extra wait
+                Commands.none(),
+                () -> limelightSubsystem.getDetectedBallCount() <= LimelightConstants.kMinBallsForContinuedShooting
+            ),
+            
+            // Switch back to AprilTag pipeline for next phase
+            Commands.runOnce(() -> limelightSubsystem.switchToAprilTagPipeline())
+        );
     }
 
     public void configureAutoChooser() {

@@ -40,7 +40,7 @@ public class RobotContainer {
 
     public final static LimelightDetectionSubSystem limelightDetectionSubsystem = new LimelightDetectionSubSystem();
 
-    private final Autos autos = new Autos(swerveSubsystem, intakeSubsystem, shooterSubsystem, intakeRetractorSubsystem);
+    private final Autos autos = new Autos(swerveSubsystem, intakeSubsystem, shooterSubsystem, intakeRetractorSubsystem, limelightDetectionSubsystem);
 
     public final static XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
     public final static XboxController operatorController = new XboxController(OIConstants.kOperatorControllerPort);
@@ -53,6 +53,7 @@ public class RobotContainer {
     public final static Trigger xboxXButtonTriggerOP = new JoystickButton(operatorController, XboxController.Button.kX.value); // intake retractor toggle
 
     public final static Trigger xboxYButtonTriggerDriver = new JoystickButton(driverController, XboxController.Button.kY.value); // aim assist toggle
+    public final static Trigger xboxXButtonTriggerDriver = new JoystickButton(driverController, XboxController.Button.kX.value); // pipeline toggle
 
     private static boolean aimAssistEnabled = false;
 
@@ -72,6 +73,7 @@ public class RobotContainer {
                 limelightDetectionSubsystem));
 
         xboxYButtonTriggerDriver.onTrue(toggleAimAssist());
+        xboxXButtonTriggerDriver.onTrue(limelightDetectionSubsystem.togglePipeline());
 
         xboxLTButtonTriggerOP.debounce(0.1).whileTrue(callDoIntake()).whileFalse(callIntakeTriggerReleased());
         intakeSubsystem.setDefaultCommand(new IntakeCmd(intakeSubsystem));

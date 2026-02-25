@@ -135,6 +135,10 @@ public final class Constants {
     }
 
     public static final class LimelightConstants {
+        // Pipeline indices
+        public static final int kAprilTagPipeline = 0;  // AprilTag detection pipeline
+        public static final int kNeuralDetectorPipeline = 1;  // Neural detector (fuel) pipeline
+        
         // Target distance from AprilTag in inches when using aim assist
         public static final double kTargetDistanceInches = 36.0;
         
@@ -153,6 +157,15 @@ public final class Constants {
         public static final double kDistanceCalibrationTyReference = -20.0; // ty angle (deg) at target distance
         public static final double kMinDistanceInches = 12.0; // Minimum estimated distance
         public static final double kMaxDistanceInches = 120.0; // Maximum estimated distance
+        
+        // Neural detector constants (fuel/ball detection)
+        public static final int kFuelClassID = 0;  // Class ID for fuel balls in neural detector
+        public static final double kMinDetectionConfidence = 0.5;  // Minimum confidence threshold for detections
+        
+        // Auto shooting constants
+        public static final int kMinBallsForContinuedShooting = 2;  // If <= this many balls, shoot 1 more second then skip
+        public static final double kMaxAutoShootingTime = 5.0;  // Maximum time to shoot in auto (seconds)
+        public static final double kExtraShootingTime = 1.0;  // Extra time to shoot when low on balls (seconds)
     }
 
 }
