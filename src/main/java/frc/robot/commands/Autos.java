@@ -7,9 +7,11 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants.LimelightConstants;
+import frc.robot.commands.SmartShootCommand;
 import frc.robot.subsystems.IntakeSubSystem;
 import frc.robot.subsystems.LimelightDetectionSubSystem;
 import frc.robot.subsystems.ShooterSubSystem;
@@ -44,36 +46,8 @@ public final class Autos {
                 .bind("deactivateShooter", shooterSubsystem.stopShootCmd())
                 .bind("switchToNeuralPipeline", Commands.runOnce(() -> limelightSubsystem.switchToNeuralDetectorPipeline()))
                 .bind("switchToAprilTagPipeline", Commands.runOnce(() -> limelightSubsystem.switchToAprilTagPipeline()))
-                .bind("smartShootWait", createSmartShootingWaitCommand());
+                .bind("smartShoot", new SmartShootCommand(limelightSubsystem, shooterSubsystem));
 
-    }
-    
-    /**
-     * Creates a smart shooting wait command that monitors ball count during auto shooting.
-     * This command:
-     * - Switches to neural pipeline briefly to check ball count
-     * - Returns immediately if ball count is sufficient
-     * - Waits longer if ball count is low (<=2 balls)
-     * - Has a maximum wait time of 5 seconds total
-     */
-    private Command createSmartShootingWaitCommand() {
-        return Commands.sequence(
-            // Switch to neural pipeline
-            Commands.runOnce(() -> limelightSubsystem.switchToNeuralDetectorPipeline()),
-            Commands.waitSeconds(0.2),  // Brief wait for pipeline switch and detection
-            
-            // Check ball count and wait accordingly
-            Commands.either(
-                // Low ball count: wait extra second (max total 5s from shooting start)
-                Commands.waitSeconds(LimelightConstants.kExtraShootingTime),
-                // Good ball count: no extra wait
-                Commands.none(),
-                () -> limelightSubsystem.getDetectedBallCount() <= LimelightConstants.kMinBallsForContinuedShooting
-            ),
-            
-            // Switch back to AprilTag pipeline for next phase
-            Commands.runOnce(() -> limelightSubsystem.switchToAprilTagPipeline())
-        );
     }
 
     public void configureAutoChooser() {
@@ -113,7 +87,18 @@ public final class Autos {
 
         // start subsequent trajectories when the previous is done
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        ballsToHub.doneDelayed(5.5).onTrue(hubToBalls.cmd()); // shooting happens during delay
+        
+        // When arriving at hub, activate shooter and use smart shooting command
+        ballsToHub.done().onTrue(
+            Commands.sequence(
+                shooterSubsystem.doShootCmd(),
+                new SmartShootCommand(limelightSubsystem, shooterSubsystem)
+            )
+        );
+        
+        // After smart shooting is done, continue to next trajectory
+        // Note: The SmartShootCommand will handle stopping the shooter
+        ballsToHub.doneDelayed(5.5).onTrue(hubToBalls.cmd());
 
         return startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }
@@ -135,9 +120,25 @@ public final class Autos {
                 )
         );
 
+        // First shooting phase with smart shooting
+        bumpToHub.done().onTrue(
+            Commands.sequence(
+                shooterSubsystem.doShootCmd(),
+                new SmartShootCommand(limelightSubsystem, shooterSubsystem)
+            )
+        );
         bumpToHub.doneDelayed(2.5).onTrue(hubToBump.cmd());
+        
         hubToBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
+        
+        // Second shooting phase with smart shooting
+        ballsToHub.done().onTrue(
+            Commands.sequence(
+                shooterSubsystem.doShootCmd(),
+                new SmartShootCommand(limelightSubsystem, shooterSubsystem)
+            )
+        );
         ballsToHub.doneDelayed(5).onTrue(hubToBalls.cmd());
 
         return startingFrom_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
