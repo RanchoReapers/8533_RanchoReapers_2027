@@ -62,7 +62,6 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
         intakeRetractorAbsoluteEncoder = new CANcoder(intakeRetractorCANCoderId);
 
         CANcoderConfiguration CANCoderConfigIntakeRetractor = new CANcoderConfiguration();
-        CANCoderConfigIntakeRetractor.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
         CANCoderConfigIntakeRetractor.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive; // clockwise???? counterclockwise???? -- they are facing the same direction so they should be the same
         CANCoderConfigIntakeRetractor.MagnetSensor.MagnetOffset = intakeRetractorCANCoderOffset;
 
