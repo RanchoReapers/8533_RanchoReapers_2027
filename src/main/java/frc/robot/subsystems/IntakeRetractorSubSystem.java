@@ -49,10 +49,6 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
     private static final double kExtendedAngle = 0.0;
     private static final double kAngleTolerance = 5;
 
-    private static final double kHoldVoltsPerDeg = 0.02;
-    private static final double kMaxHoldVoltage = 3.0;
-    // change the angles once you calibrate CANCoders
-
     private currentStateIntakeRetractor currentState;
     private desiredDirectionIntakeRetractor desiredDirection;
     
@@ -171,26 +167,6 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
 
     public void intakeRetractorControl() {
         
-        /*
-        if (currentState == currentStateIntakeRetractor.IDLE_EXTENDED && intakeRetractionMotorStopped && (desiredDirection != desiredDirectionIntakeRetractor.RETRACT)) {
-            double error = getIntakeAngleDeg() - kExtendedAngle;
-
-            if (Math.abs(error) > kAngleTolerance) {
-
-                double holdVoltage = clamp(-kHoldVoltsPerDeg * error, -kMaxHoldVoltage, kMaxHoldVoltage);
-                if (Math.abs(holdVoltage) > 0.01) {
-                    intakeRetractorMotor.setVoltage(holdVoltage);
-                } else {
-                    endIntakeRetractionMotor();
-                    intakeRetractionMotorStopped = true;
-                }
-            } else {
-                endIntakeRetractionMotor();
-                intakeRetractionMotorStopped = true;
-            }
-            return; // don't run the movement switch while holding
-        }
-        */
         switch (desiredDirection) {
 
             case EXTEND -> {
