@@ -47,7 +47,7 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
 
     private static final double kRetractedAngle = 0.0;
     private static final double kExtendedAngle = 90.0;
-    private static final double kAngleTolerance = 1.5;
+    private static final double kAngleTolerance = 5;
 
     private static final double kHoldVoltsPerDeg = 0.02;
     private static final double kMaxHoldVoltage = 3.0;
@@ -101,10 +101,9 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
                 .idleMode(IdleMode.kBrake)
                 .inverted(false);
         sparkConfigIntakeRetractorMotor.encoder
-                .positionConversionFactor(9 * Math.PI * 2)
-                .velocityConversionFactor((9 * Math.PI * 2) / 60 );
+                .positionConversionFactor(0.079365)
+                .velocityConversionFactor(0.079365);
         sparkConfigIntakeRetractorMotor.smartCurrentLimit(60, 60);
-        // MAKE SURE TO UPDATE THE POSITION & VELOCITY CONVERSION FACTORS WHEN WE KNOW THE GEAR RATIOS
 
         intakeRetractorMotor.configure(sparkConfigIntakeRetractorMotor, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
     }
@@ -172,6 +171,8 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
     }
 
     public void intakeRetractorControl() {
+        
+        /*
         if (currentState == currentStateIntakeRetractor.IDLE_EXTENDED && intakeRetractionMotorStopped && (desiredDirection != desiredDirectionIntakeRetractor.RETRACT)) {
             double error = getIntakeAngleDeg() - kExtendedAngle;
 
@@ -190,7 +191,7 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
             }
             return; // don't run the movement switch while holding
         }
-
+        */
         switch (desiredDirection) {
 
             case EXTEND -> {

@@ -28,10 +28,9 @@ public class IntakeSubSystem extends SubsystemBase {
                 .idleMode(IdleMode.kBrake)
                 .inverted(true);
         sparkConfigIntakeMotor.encoder
-                .positionConversionFactor(3 * Math.PI * 2)
-                .velocityConversionFactor((3 * Math.PI * 2) / 60 );
+                .positionConversionFactor(0.466667)
+                .velocityConversionFactor(0.466667);
         sparkConfigIntakeMotor.smartCurrentLimit(60, 60);
-        // MAKE SURE TO UPDATE THE POSITION & VELOCITY CONVERSION FACTORS WHEN WE KNOW THE GEAR RATIOS
 
         intakeMotor.configure(sparkConfigIntakeMotor, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
     }

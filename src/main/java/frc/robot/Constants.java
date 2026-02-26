@@ -23,7 +23,7 @@ public final class Constants {
     }
 
     public final class IntakeRetractorConstants {
-        public static final double IntakeRetractorVoltage = 6;
+        public static final double IntakeRetractorVoltage = 2;
 
         public static final double IntakeRetractorAbsoluteEncoderOffsetRad = 0 - (0);
         // MAKE SURE TO UPDATE OFFSETS WHEN WE HAVE THE ROBOT BUILT
