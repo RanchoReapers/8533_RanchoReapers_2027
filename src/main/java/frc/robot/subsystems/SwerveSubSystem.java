@@ -166,17 +166,16 @@ public class SwerveSubSystem extends SubsystemBase {
         }).start();
     }
 
-    /*public double getHeading() {
-        return Math.IEEEremainder(-gyro.getAngle(), 360);
-    }
-*/
     public Rotation2d getRotation2d() {
-    //    return Rotation2d.fromDegrees(getHeading());
         return gyro.getRotation2d();
     }
 
     public Pose2d getPose() {
         return odometer.getPoseMeters();
+    }
+
+    public double getHeadingInDegrees() {
+        return gyro.getRotation2d().getDegrees();
     }
 
     public void resetOdometry(Pose2d pose) {

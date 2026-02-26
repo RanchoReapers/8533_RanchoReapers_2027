@@ -5,6 +5,7 @@ package frc.robot;
 
 // import static frc.robot.RobotContainer.intakeSubsystem;
 // import static frc.robot.RobotContainer.shooterSubsystem;
+import static frc.robot.RobotContainer.limelightDetectionSubsystem;
 // UNCOMMENT THESE WHEN ROBOT IS BUILT AND WIRED
 import static frc.robot.RobotContainer.swerveSubsystem;
 
@@ -128,7 +129,15 @@ public class Robot extends TimedRobot {
 
         hubStatus.set(false);
         corruptFMSData.set(false);
+        limelightDetectionSubsystem.setPipelineIndex(0);
     }
+
+    @Override
+    public void autonomousInit() { 
+        limelightDetectionSubsystem.setPipelineIndex(1);
+    }
+
+
 
     @Override
     public void teleopPeriodic() {

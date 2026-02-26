@@ -2,11 +2,12 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.Autos;
+import frc.robot.commands.LimelightDetectionCmd;
 import frc.robot.commands.SwerveJoystickCmd;
 import frc.robot.subsystems.LimelightDetectionSubSystem;
 import frc.robot.subsystems.SwerveSubSystem;
@@ -28,21 +29,23 @@ public class RobotContainer {
 
     public final static Trigger xboxLTButtonTriggerOP = new Trigger(() -> operatorController.getRawAxis(XboxController.Axis.kLeftTrigger.value) >= 0.1); // intake in
     public final static Trigger xboxRTButtonTriggerOP = new Trigger(() -> operatorController.getRawAxis(XboxController.Axis.kRightTrigger.value) >= 0.1); // shoot out
-
-    public final static Trigger xboxLBButtonTriggerOP = new JoystickButton(operatorController, XboxController.Button.kLeftBumper.value); // climber down
-    public final static Trigger xboxRBButtonTriggerOP = new JoystickButton(operatorController, XboxController.Button.kRightBumper.value); // climber up
     public final static Trigger xboxXButtonTriggerOP = new JoystickButton(operatorController, XboxController.Button.kX.value); // intake retractor toggle
+
+    public final static Trigger xboxXButtonTriggerDriver = new JoystickButton(driverController, XboxController.Button.kX.value); // aim assist toggle
+    public final static Trigger xboxYButtonTriggerDriver = new JoystickButton(driverController, XboxController.Button.kY.value); // limelight pipeline toggle
 
     public RobotContainer() {
 
         autos.configureAutoChooser();
 
-        //swerveSubsystem.setDefaultCommand(swapDriveControlMethod());
-        swerveSubsystem.setDefaultCommand(new SwerveJoystickCmd(swerveSubsystem,
+        swerveSubsystem.setDefaultCommand(new SwerveJoystickCmd(
+                swerveSubsystem,
                 () -> driverController.getRawAxis(OIConstants.kDriverYAxis),
                 () -> driverController.getRawAxis(OIConstants.kDriverXAxis),
                 () -> driverController.getRawAxis(OIConstants.kDriverRotAxis),
-                () -> driverController.getRightBumperButton()));
+                () -> driverController.getRightBumperButton(),
+                () -> !limelightDetectionSubsystem.limelightOverrideActive, // returns TRUE when OVERRIDE is ACTIVE (Limelight DISABLED) -> pass as FALSE as SwerveJoystickCmd asks if aim assist is ENABLED or not
+                limelightDetectionSubsystem));
 
         /* xboxLTButtonTriggerOP.debounce(0.1).whileTrue(callDoIntake()).whileFalse(callIntakeTriggerReleased());
         intakeSubsystem.setDefaultCommand(new IntakeCmd(intakeSubsystem));
@@ -52,21 +55,9 @@ public class RobotContainer {
 
         xboxXButtonTriggerOP.debounce(0.1).onTrue(callDoIntakeRetraction());
         intakeRetractorSubsystem.setDefaultCommand(new IntakeRetractorCmd(intakeRetractorSubsystem));*/
-
-    }
-
-    public Command swapDriveControlMethod() {
-        return new ConditionalCommand(new SwerveJoystickCmd(swerveSubsystem,
-                () -> limelightDetectionSubsystem.getXSpeedLimelight(),
-                () -> limelightDetectionSubsystem.getYSpeedLimelight(),
-                () -> limelightDetectionSubsystem.getTurnAngleLimelight(),
-                () -> false),
-                new SwerveJoystickCmd(swerveSubsystem,
-                        () -> driverController.getRawAxis(OIConstants.kDriverXAxis),
-                        () -> driverController.getRawAxis(OIConstants.kDriverYAxis),
-                        () -> driverController.getRawAxis(OIConstants.kDriverRotAxis),
-                        () -> driverController.getRightBumperButton()),
-                limelightDetectionSubsystem.getAimAssistActive());
+        
+        xboxXButtonTriggerDriver.debounce(0.1).onTrue(callSwapLimelightOverride());
+        limelightDetectionSubsystem.setDefaultCommand(new LimelightDetectionCmd(limelightDetectionSubsystem));
     }
 
     /*public Command callDoIntake() {
@@ -89,6 +80,13 @@ public class RobotContainer {
         return new InstantCommand(() -> intakeRetractorSubsystem.doIntakeRetraction());
     } */
 
+    public Command callSwapLimelightOverride() {
+        return new InstantCommand(() -> limelightDetectionSubsystem.swapLimelightOverrideActive());
+    }
+
+    public Command callToggleLimelightPipeline() {
+        return new InstantCommand(() -> limelightDetectionSubsystem.swapPipelineIndex());
+    }
 
     public void generalPeriodic() {
         swerveSubsystem.periodic();
