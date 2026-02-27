@@ -194,12 +194,13 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
         SmartDashboard.putString("CurrentState", currentState.toString());
         updateIntakeRetractorAlert();
 
-        if (intakeRetractionProhibitedRumbleActive) {
-            RobotContainer.operatorController.setRumble(RumbleType.kBothRumble, 1.0);
+        if (intakeRetractionProhibitedRumbleActive && !(DriverStation.getMatchTime() >= 28.0 && DriverStation.getMatchTime() <= 33.0)) {
             if (intakeRetractionProhibitedRumbleTimer.hasElapsed(1.0)) {
                 RobotContainer.operatorController.setRumble(RumbleType.kBothRumble, 0.0);
                 intakeRetractionProhibitedRumbleTimer.stop();
                 intakeRetractionProhibitedRumbleActive = false;
+            } else {
+                RobotContainer.operatorController.setRumble(RumbleType.kBothRumble, 1.0);
             }
         }
     }
