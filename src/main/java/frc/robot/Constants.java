@@ -10,6 +10,7 @@ public final class Constants {
     public final class IntakeConstants {
         public static final double IntakeVoltage = 5;
     }
+    
     public final class ShooterConstants {
         public static final double ShooterVoltage = 6;
     }
@@ -25,7 +26,7 @@ public final class Constants {
         public static final double kDriveEncoderRot2Meter = 0.148148148 * Math.PI * 0.1; // Drive motor gear ratio * PI * Robot wheel diameter (in meters)
         public static final double kTurnEncoderRot2Rad = 0.04666666 * Math.PI * 2; // Turn motor gear ratio converted to radians
     }
-
+    
     public static final class DriveConstants {
         // SECTION - Base measurements
         // NOTE - CHANGE kTrackWidth & kWheelBase IF YOU CHANGE BASE MEASUREMENTS

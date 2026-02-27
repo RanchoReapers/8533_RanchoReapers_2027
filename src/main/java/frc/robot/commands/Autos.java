@@ -1,12 +1,5 @@
 package frc.robot.commands;
 
-import choreo.auto.AutoChooser;
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import static frc.robot.generated.ChoreoTraj.BLUEBackOfHubToRightBump;
 import static frc.robot.generated.ChoreoTraj.BLUEBackofHubToLeftBump;
 import static frc.robot.generated.ChoreoTraj.BLUEHubToBackOfHub;
@@ -26,24 +19,38 @@ import static frc.robot.generated.ChoreoTraj.BLUERightHubToBump;
 import static frc.robot.generated.ChoreoTraj.BLUERightHubToRightBallsCollectionViaBump;
 import static frc.robot.generated.ChoreoTraj.BLUERightHubToRightBallsCollectionViaTrench;
 import static frc.robot.generated.ChoreoTraj.BLUERightTrenchToRightSideOfBalls;
-import frc.robot.subsystems.SwerveSubSystem;
-import frc.robot.subsystems.IntakeSubSystem;
+
+import java.util.Set;
+
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.IntakeRetractorSubSystem;
+import frc.robot.subsystems.IntakeSubSystem;
+import frc.robot.subsystems.LimelightDetectionSubSystem;
+import frc.robot.subsystems.SwerveSubSystem;
 
 public final class Autos {
 
     private final SwerveSubSystem swerveSubSystem;
     private final IntakeSubSystem intakeSubsystem;
     private final IntakeRetractorSubSystem intakeRetractorSubsystem;
+    private final LimelightDetectionSubSystem limelightDetectionSubsystem;
     //private final ShooterSubSystem shooterSubsystem;
 
     private final AutoFactory autoFactory;
     private final AutoChooser autonomousProgramChooser;
 
-    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem/* , ShooterSubSystem shooterSubsystem*/) {
+    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem, LimelightDetectionSubSystem limelightDetectionSubsystem/* , ShooterSubSystem shooterSubsystem*/) {
         this.swerveSubSystem = swerveSubSystem;
         this.intakeSubsystem = intakeSubsystem;
         this.intakeRetractorSubsystem = intakeRetractorSubsystem;
+        this.limelightDetectionSubsystem = limelightDetectionSubsystem;
         //this.shooterSubsystem = shooterSubsystem;
 
         this.autoFactory = swerveSubSystem.createAutoFactory();
@@ -54,8 +61,7 @@ public final class Autos {
                 .bind("deactivateIntake", intakeSubsystem.stopIntakeCmd());
                 .bind("activateShooter", shooterSubsystem.doShootCmd())
                 .bind("deactivateShooter", shooterSubsystem.stopShootCmd());
-                */
-
+         */
     }
 
     public void configureAutoChooser() {
@@ -73,6 +79,58 @@ public final class Autos {
 
         RobotModeTriggers.autonomous().whileTrue(autonomousProgramChooser.selectedCommandScheduler());
     }
+
+    public void startShootingForPeriodOfTime(AutoTrajectory firstRoutine, AutoTrajectory routineToStartAfterShootingFinishes, int lowBallThreshold, double debounceTimeSeconds, double timeoutSeconds) {
+        firstRoutine.done().onTrue(
+                Commands.defer(() -> {
+
+                    Timer shootTimer = new Timer();
+                    Timer debounceTimer = new Timer();
+
+                    shootTimer.start();
+                    debounceTimer.start();
+
+                    return Commands.sequence(
+
+                            // Start shooter once
+                            shooterSubsystem.doShootCmd(),
+
+                            // Wait until low balls (debounced) OR 5 sec timeout
+                            Commands.waitUntil(() -> {
+
+                                int count = limelightDetectionSubsystem.getTargetCountLimelight();
+
+                                if (count > 2) {
+                                    debounceTimer.restart();
+                                }
+
+                                boolean debouncedLowBalls
+                                        = count <= 2 && debounceTimer.hasElapsed(0.2);
+
+                                boolean timeout
+                                        = shootTimer.hasElapsed(5.0);
+
+                                return debouncedLowBalls || timeout;
+                            }),
+
+                            // If ended because of low balls → wait 1 extra second
+                            Commands.either(
+                                    Commands.waitSeconds(1.0),
+                                    Commands.none(),
+                                    () -> limelightDetectionSubsystem.getTargetCountLimelight() <= 2
+                            ),
+
+                            // Stop shooter
+                            shooterSubsystem.stopShootCmd(),
+
+                            // Starts next commands
+                            routineToStartAfterShootingFinishes.cmd()
+                    );
+
+                    // requirements
+                }, Set.of(shooterSubsystem))
+        );
+    } 
 
     // below are our competition autos NOT DONE
     private AutoRoutine startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_Auto() {
@@ -95,7 +153,7 @@ public final class Autos {
 
         // start subsequent trajectories when the previous is done
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        ballsToHub.doneDelayed(5.5).onTrue(hubToBalls.cmd()); // shooting happens during delay
+        //startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.0); 
 
         return startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }

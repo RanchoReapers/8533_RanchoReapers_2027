@@ -136,7 +136,7 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
         intakeRetractorMotor.stopMotor();
     }
 
-    public double getIntakeAngleDeg() {
+    public final double getIntakeAngleDeg() {
         return intakeRetractorAbsoluteEncoder.getPosition().getValueAsDouble() * 360.0;
     }
 

@@ -27,7 +27,7 @@ public class RobotContainer {
 
     public final static LimelightDetectionSubSystem limelightDetectionSubsystem = new LimelightDetectionSubSystem();
 
-    private final Autos autos = new Autos(swerveSubsystem, intakeSubsystem, intakeRetractorSubsystem/*, shooterSubsystem*/);
+    private final Autos autos = new Autos(swerveSubsystem, intakeSubsystem, intakeRetractorSubsystem, limelightDetectionSubsystem/*, shooterSubsystem*/);
 
     public final static XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
     public final static XboxController operatorController = new XboxController(OIConstants.kOperatorControllerPort);
@@ -59,37 +59,38 @@ public class RobotContainer {
         intakeRetractorSubsystem.setDefaultCommand(new IntakeRetractorCmd(intakeRetractorSubsystem));
         
         xboxXButtonTriggerDriver.debounce(0.1).onTrue(callSwapLimelightOverride());
+        xboxYButtonTriggerDriver.debounce(0.1).onTrue(callToggleLimelightPipeline());
         limelightDetectionSubsystem.setDefaultCommand(new LimelightDetectionCmd(limelightDetectionSubsystem));
 
         /*xboxRTButtonTriggerOP.debounce(0.1).whileTrue(callDoShoot()).whileFalse(callShooterTriggerReleased());
         shooterSubsystem.setDefaultCommand(new ShooterCmd(shooterSubsystem));*/
     }
 
-    public Command callDoIntake() {
+    public final Command callDoIntake() {
         return new InstantCommand(() -> intakeSubsystem.doIntake());
     }
 
-    public Command callIntakeTriggerReleased() {
+    public final Command callIntakeTriggerReleased() {
         return new InstantCommand(() -> intakeSubsystem.intakeTriggerReleased());
     }
     
-    /*public Command callDoShoot() {
+    /*public final Command callDoShoot() {
         return new InstantCommand(() -> shooterSubsystem.doShoot());
     }
 
-    public Command callShooterTriggerReleased() {
+    public final Command callShooterTriggerReleased() {
         return new InstantCommand(() -> shooterSubsystem.shooterTriggerReleased());
     }*/
     
-    public Command callDoIntakeRetraction() {
+    public final Command callDoIntakeRetraction() {
         return new InstantCommand(() -> intakeRetractorSubsystem.doIntakeRetraction());
     }
 
-    public Command callSwapLimelightOverride() {
+    public final Command callSwapLimelightOverride() {
         return new InstantCommand(() -> limelightDetectionSubsystem.swapLimelightOverrideActive());
     }
 
-    public Command callToggleLimelightPipeline() {
+    public final Command callToggleLimelightPipeline() {
         return new InstantCommand(() -> limelightDetectionSubsystem.swapPipelineIndex());
     }
 

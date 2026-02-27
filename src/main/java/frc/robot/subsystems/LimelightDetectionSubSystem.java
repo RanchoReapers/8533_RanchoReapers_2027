@@ -161,6 +161,10 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
         return turnSpeedLimelight;
     }
 
+    public int getTargetCountLimelight() {
+        return targetCount;
+    }
+
     public void setPipelineIndex(int index) {
         LimelightHelpers.setPipelineIndex("limelight", index);
     }
