@@ -42,6 +42,11 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
     double ySpeedLimelight = 0.0;
     double turnSpeedLimelight = 0.0;
 
+    // modified only from SwerveJoystickCmd but stored here so that they can be accessed by Robot.java
+    public double xSpeedBeforeLimelight;
+    public double ySpeedBeforeLimelight;
+    public double turningSpeedBeforeLimelight;
+
     public LimelightDetectionSubSystem() {
 
         if (DriverStation.isAutonomous()) {
@@ -163,6 +168,10 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
 
     public int getTargetCountLimelight() {
         return targetCount;
+    }
+
+    public boolean getAimAssistActive() {
+        return aimAssistActive;
     }
 
     public void setPipelineIndex(int index) {

@@ -3,7 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
-// import static frc.robot.RobotContainer.intakeSubsystem;
+import static frc.robot.RobotContainer.intakeSubsystem;
 // import static frc.robot.RobotContainer.shooterSubsystem;
 import static frc.robot.RobotContainer.limelightDetectionSubsystem;
 // UNCOMMENT THESE WHEN ROBOT IS BUILT AND WIRED
@@ -60,7 +60,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledPeriodic() {
-        LEDPattern allyColorFMSPresent = LEDPattern.solid(Color.kDeepPink);
+        Color purple = new Color(195, 0, 255);
+        Color orange = new Color(255, 145, 0);
+
+        LEDPattern allyColorFMSPresent = LEDPattern.solid(orange);
 
         Optional<Alliance> ally = DriverStation.getAlliance();
 
@@ -70,14 +73,13 @@ public class Robot extends TimedRobot {
             allyColorFMSPresent = LEDPattern.solid(Color.kRed);
         }
 
-        // If FMS attached, solid alliance color. If not, display a moving "chase" to draw attention.
+        // If FMS attached, solid alliance color. If not, display purple.
         if (m_led != null && m_ledBuffer != null) {
             if (DriverStation.isFMSAttached()) {
                 allyColorFMSPresent.applyTo(m_ledBuffer);
                 m_led.setData(m_ledBuffer);
             } else {
-                // fun chase with med purple and black background
-                applyChase(Color.kMediumPurple, Color.kBlack, 0.12);
+                applySolidColor(purple);
             }
         }
     }
@@ -121,11 +123,12 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         swerveSubsystem.periodic();
+        applyRainbowCycle(0.6);
     }
 
     @Override
     public void teleopInit() {
-        // intakeSubsystem.intakeMotorStopped = true;
+        intakeSubsystem.intakeMotorStopped = true;
         // shooterSubsystem.shooterMotorStopped = true;
         // UNCOMMENT THESE WHEN ROBOT IS BUILT AND WIRED
 
@@ -135,11 +138,9 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void autonomousInit() { 
+    public void autonomousInit() {
         limelightDetectionSubsystem.setPipelineIndex(1);
     }
-
-
 
     @Override
     public void teleopPeriodic() {
@@ -156,7 +157,6 @@ public class Robot extends TimedRobot {
                     corruptFMSData.set(false);
                 }
                 case 135 -> {
-                    // 5 SECOND WARNING BEFORE SHIFT 1
                     if (gameData.length() > 0 && ally.isPresent()) {
                         if (ally.get() == Alliance.Red) {
                             switch (gameData.charAt(0)) {
@@ -375,16 +375,18 @@ public class Robot extends TimedRobot {
 
             hubStatus.set(true);
 
-            // Publish hub color: green when ACTIVE, grey when INACTIVE, flashing yellow during FIVE_SECOND_WARNING
-            Color green = new Color(0, 255, 0);
+            // Publish hub color: purple when ACTIVE, grey when INACTIVE, flashing yellow during FIVE_SECOND_WARNING
             Color grey = new Color(128, 128, 128);
             Color yellow = new Color(255, 255, 0);
+            Color purple = new Color(195, 0, 255);
+            Color electricGreen = new Color(0, 255, 72);
+            Color wine = new Color(135, 0, 88);
 
             Color hubColor;
 
             switch (hubState) {
                 case ACTIVE ->
-                    hubColor = green;
+                    hubColor = purple;
                 case INACTIVE ->
                     hubColor = grey;
                 case FIVE_SECOND_WARNING -> {
@@ -399,18 +401,20 @@ public class Robot extends TimedRobot {
 
             // Update addressable LEDs
             if (m_led != null && m_ledBuffer != null) {
+
                 double matchTime = DriverStation.getMatchTime();
 
-                // Endgame: show a colorful rainbow sweep to celebrate / indicate urgency
-                if (matchTime > 0 && matchTime <= 30.0) {
+                if (limelightDetectionSubsystem.getAimAssistActive() && getNoAimAssistInterference()) { // aim assist active with no interference: solid cyan
+                    applySolidColor(electricGreen);
+                } else if (limelightDetectionSubsystem.getAimAssistActive() && !getNoAimAssistInterference()) { // aim assist active with interference: flashing cyan/red
+                    applyFlashing(electricGreen, wine, 300);
+                } else if (matchTime > 0 && matchTime <= 30.0) { // Endgame: show a colorful rainbow sweep to celebrate / indicate urgency
                     if (matchTime <= 5) {
-                        applyRainbowCycle(1.2); // speed factor) {
+                        applyRainbowCycle(1.2); // speed factor
                     } else {
                         applyRainbowCycle(0.6); // speed factor
                     }
-
-                } else {
-                    // Active: green pulse; Five Second Warning: flash between yellow and gray; default: gray
+                } else { // Active: green pulse; Five Second Warning: flash between yellow and gray; default: gray
                     switch (hubState) {
                         case ACTIVE ->
                             applyPulse(hubColor, 1.2);
@@ -421,7 +425,51 @@ public class Robot extends TimedRobot {
                     }
                 }
             }
+        } else {
+
+            Color purple = new Color(195, 0, 255);
+            if (RobotController.getRSLState()) {
+                applySolidColor(Color.kYellow);
+            } else if (!RobotController.getRSLState()) {
+                applySolidColor(purple);
+            }
+
         }
+
+    }
+
+    private boolean getNoAimAssistInterference() {
+
+        boolean foughtAgainstX = true;
+        boolean foughtAgainstY = true;
+        boolean foughtAgainstTurning = true;
+
+        if (limelightDetectionSubsystem.getXSpeedLimelight() == 0) {
+            foughtAgainstX = false;
+        }
+
+        if (limelightDetectionSubsystem.getXSpeedLimelight() != 0 && limelightDetectionSubsystem.xSpeedBeforeLimelight == 0) {
+            foughtAgainstX = false;
+        }
+
+        if (limelightDetectionSubsystem.getYSpeedLimelight() == 0) {
+            foughtAgainstY = false;
+        }
+
+        if (limelightDetectionSubsystem.getYSpeedLimelight() != 0 && limelightDetectionSubsystem.ySpeedBeforeLimelight == 0) {
+            foughtAgainstY = false;
+        }
+
+        if (limelightDetectionSubsystem.getTurnSpeedLimelight() == 0) {
+            foughtAgainstTurning = false;
+        }
+
+        if (limelightDetectionSubsystem.getTurnSpeedLimelight() != 0 && limelightDetectionSubsystem.turningSpeedBeforeLimelight == 0) {
+            foughtAgainstTurning = false;
+        }
+
+        return !(foughtAgainstX || foughtAgainstY || foughtAgainstTurning);
+
     }
 
     // ---------- LED helper methods ----------
@@ -434,26 +482,6 @@ public class Robot extends TimedRobot {
         boolean on = ((System.currentTimeMillis() / periodMs) % 2) == 0;
         Color c = on ? onColor : offColor;
         applySolidColor(c);
-    }
-
-    private void applyChase(Color dotColor, Color bgColor, double speedSecondsPerLoop) {
-        int len = m_ledBuffer.getLength();
-        long t = System.currentTimeMillis();
-        int pos = (int) ((t / (long) (speedSecondsPerLoop * 1000)) % len);
-        int rBg = (int) (bgColor.red * 255);
-        int gBg = (int) (bgColor.green * 255);
-        int bBg = (int) (bgColor.blue * 255);
-        int rDot = (int) (dotColor.red * 255);
-        int gDot = (int) (dotColor.green * 255);
-        int bDot = (int) (dotColor.blue * 255);
-        for (int i = 0; i < len; i++) {
-            if (i == pos) {
-                m_ledBuffer.setRGB(i, rDot, gDot, bDot);
-            } else {
-                m_ledBuffer.setRGB(i, rBg, gBg, bBg);
-            }
-        }
-        m_led.setData(m_ledBuffer);
     }
 
     private void applyPulse(Color baseColor, double periodSeconds) {
