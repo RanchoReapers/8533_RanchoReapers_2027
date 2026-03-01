@@ -46,8 +46,8 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
         RETRACTING
     }
 
-    private static final double kRetractedAngle = 85.0;
-    private static final double kExtendedAngle = 0.0;
+    private static final double kRetractedAngle = -85.0;
+    private static final double kExtendedAngle = -3;
     private static final double kAngleTolerance = 3.5;
 
     private currentStateIntakeRetractor currentState;
@@ -166,7 +166,7 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
 
             case EXTEND -> {
                 if ((Math.abs(getIntakeAngleDeg() - kExtendedAngle) > kAngleTolerance) && intakeRetractionMotorStopped == false) {
-                    intakeRetractorMotor.setVoltage(IntakeRetractorConstants.IntakeRetractorVoltage); // ASSUMES VOLTAGE IS POSITIVE TO EXTEND -- TEST
+                    intakeRetractorMotor.setVoltage(1); // ASSUMES VOLTAGE IS POSITIVE TO EXTEND -- TEST
                     currentState = currentStateIntakeRetractor.EXTENDING;
                 } else {
                     endIntakeRetractionMotor();
@@ -177,7 +177,7 @@ public class IntakeRetractorSubSystem extends SubsystemBase {
 
             case RETRACT -> {
                 if ((Math.abs(getIntakeAngleDeg() - kRetractedAngle) > kAngleTolerance) && intakeRetractionMotorStopped == false) {
-                    intakeRetractorMotor.setVoltage(-IntakeRetractorConstants.IntakeRetractorVoltage); // ASSUMES VOLTAGE IS NEGATIVE TO RETRACT -- TEST
+                    intakeRetractorMotor.setVoltage(-12); // ASSUMES VOLTAGE IS NEGATIVE TO RETRACT -- TEST
                     currentState = currentStateIntakeRetractor.RETRACTING;
                 } else {
                     endIntakeRetractionMotor();

@@ -8,7 +8,7 @@ import edu.wpi.first.math.util.Units;
 public final class Constants {
 
     public final class IntakeConstants {
-        public static final double IntakeVoltage = 2.5;
+        public static final double IntakeVoltage = 2.25;
     }
     
     public final class ShooterConstants {
@@ -16,7 +16,6 @@ public final class Constants {
     }
 
     public final class IntakeRetractorConstants {
-        public static final double IntakeRetractorVoltage = 6;
 
         public static final double IntakeRetractorAbsoluteEncoderOffsetRad = 0.227051;
         // MAKE SURE TO UPDATE OFFSETS WHEN WE HAVE THE ROBOT BUILT
