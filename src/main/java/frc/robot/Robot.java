@@ -6,9 +6,8 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.robot.RobotContainer.intakeSubsystem;
-// import static frc.robot.RobotContainer.shooterSubsystem;
+import static frc.robot.RobotContainer.shooterSubsystem;
 import static frc.robot.RobotContainer.limelightDetectionSubsystem;
-// UNCOMMENT THESE WHEN ROBOT IS BUILT AND WIRED
 import static frc.robot.RobotContainer.swerveSubsystem;
 
 import java.util.Optional;
@@ -140,8 +139,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         intakeSubsystem.intakeMotorStopped = true;
-        // shooterSubsystem.shooterMotorStopped = true;
-        // UNCOMMENT THESE WHEN ROBOT IS BUILT AND WIRED
+        shooterSubsystem.shooterMotorsStopped = true;
 
         hubStatus.set(false);
         corruptFMSData.set(false);

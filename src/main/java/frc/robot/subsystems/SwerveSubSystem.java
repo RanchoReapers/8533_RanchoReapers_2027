@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.AutoConstants;
+import edu.wpi.first.units.*;
 
 import choreo.trajectory.SwerveSample;
 import choreo.auto.AutoFactory;
@@ -178,6 +179,10 @@ public class SwerveSubSystem extends SubsystemBase {
         return gyro.getRotation2d().getDegrees();
     }
 
+    public void resetYaw() {
+        gyro.resetYaw();
+    }
+
     public void resetOdometry(Pose2d pose) {
         odometer.resetPosition(getRotation2d(), new SwerveModulePosition[]{
             frontLeft.getPosition(),
@@ -260,7 +265,9 @@ public class SwerveSubSystem extends SubsystemBase {
         SmartDashboard.putNumber("Back Right Turn Velocity", backRight.getTurningVelocity());
 
         SmartDashboard.putNumber("Heading", getHeadingInDegrees());
-    }
+        SmartDashboard.putNumber("Yaw", gyro.getYaw().in(Units.Degrees));
+        SmartDashboard.putNumber("YawRAD", gyro.getYaw().in(Units.Radians));
+   }
 
     public void stopModules() {
         frontLeft.stop();
