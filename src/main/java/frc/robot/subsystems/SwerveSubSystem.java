@@ -77,7 +77,6 @@ public class SwerveSubSystem extends SubsystemBase {
     private double lastOmega = 0.0;
     private static final double CONTROL_LOOP_DT = 0.02; // time in seconds
 
-    
     // auto path following \/
     public void followPath(SwerveSample sample) {
         pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
@@ -171,6 +170,10 @@ public class SwerveSubSystem extends SubsystemBase {
         return gyro.getRotation2d();
     }
 
+    public Rotation2d getRotation2dForSmartDashboard() {
+        return Rotation2d.fromDegrees(gyro.getYaw().in(Units.Degrees));
+    }
+
     public Pose2d getPose() {
         return odometer.getPoseMeters();
     }
@@ -190,7 +193,7 @@ public class SwerveSubSystem extends SubsystemBase {
             backLeft.getPosition(),
             backRight.getPosition()
         }, pose);
-        
+
         // reset internal velocity trackers so acceleration limiter doesn't introduce a jump
         lastVx = 0.0;
         lastVy = 0.0;
@@ -265,9 +268,10 @@ public class SwerveSubSystem extends SubsystemBase {
         SmartDashboard.putNumber("Back Right Turn Velocity", backRight.getTurningVelocity());
 
         SmartDashboard.putNumber("Heading", getHeadingInDegrees());
-        SmartDashboard.putNumber("Yaw", gyro.getYaw().in(Units.Degrees));
         SmartDashboard.putNumber("YawRAD", gyro.getYaw().in(Units.Radians));
-   }
+        SmartDashboard.putNumber("Rotation2dForSD", getRotation2dForSmartDashboard().getDegrees());
+        SmartDashboard.putNumber("Rotation2d", getRotation2d().getDegrees());
+    }
 
     public void stopModules() {
         frontLeft.stop();

@@ -11,7 +11,6 @@ import static frc.robot.RobotContainer.limelightDetectionSubsystem;
 import static frc.robot.RobotContainer.swerveSubsystem;
 
 import java.util.Optional;
-
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
@@ -102,6 +101,12 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("CPU Temp", RobotController.getCPUTemp());
         SmartDashboard.putBoolean("RSL", RobotController.getRSLState());
         SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+
+        RobotContainer.swerveSubsystem.getPose();
+        SmartDashboard.putNumber("Robot Pose X", RobotContainer.swerveSubsystem.getPose().getX());
+        SmartDashboard.putNumber("Robot Pose Y", RobotContainer.swerveSubsystem.getPose().getY());
+        SmartDashboard.putNumber("Robot Pose Rotation", RobotContainer.swerveSubsystem.getPose().getRotation().getDegrees());
+        
         m_robotContainer.disabledPeriodic();
 
         m_field.setRobotPose(RobotContainer.swerveSubsystem.getPose());

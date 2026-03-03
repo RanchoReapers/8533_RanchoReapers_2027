@@ -80,21 +80,23 @@ public class SwerveJoystickCmd extends Command {
             turningSpeed = turningLimiter.calculate(turningSpeed) * (DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond);
         }
 
-        // 3.5 If aim assist is enabled, override joystick inputs with Limelight corrections (blended with driver input)
-        if (aimAssistEnabledFunction.get()) {
-            limelightDetectionSubsystem.xSpeedBeforeLimelight = xSpeed;
-            limelightDetectionSubsystem.ySpeedBeforeLimelight = ySpeed;
-            limelightDetectionSubsystem.turningSpeedBeforeLimelight = turningSpeed;
+        // 3.5. If aim assist is enabled, override joystick inputs with Limelight corrections (blended with driver input). Respects slow drive/turn modifiers.
+
+        limelightDetectionSubsystem.xSpeedBeforeLimelight = xSpeed;
+        limelightDetectionSubsystem.ySpeedBeforeLimelight = ySpeed;
+        limelightDetectionSubsystem.turningSpeedBeforeLimelight = turningSpeed;
+
+        if (aimAssistEnabledFunction.get() && RobotContainer.driverController.getLeftBumperButton()) {
+            xSpeed += (limelightDetectionSubsystem.getXSpeedLimelight() * DriveConstants.kSlowButtonDriveModifier);
+            ySpeed += (limelightDetectionSubsystem.getYSpeedLimelight() * DriveConstants.kSlowButtonDriveModifier);
+            turningSpeed += (limelightDetectionSubsystem.getTurnSpeedLimelight() * DriveConstants.kSlowButtonTurnModifier);
+        } else if (aimAssistEnabledFunction.get()) {
             xSpeed += limelightDetectionSubsystem.getXSpeedLimelight();
             ySpeed += limelightDetectionSubsystem.getYSpeedLimelight();
             turningSpeed += limelightDetectionSubsystem.getTurnSpeedLimelight();
-        } else {
-            limelightDetectionSubsystem.xSpeedBeforeLimelight = xSpeed;
-            limelightDetectionSubsystem.ySpeedBeforeLimelight = ySpeed;
-            limelightDetectionSubsystem.turningSpeedBeforeLimelight = turningSpeed;
         }
 
-        // 3.75 driver rumble when attempting to drive against active limelight corrections
+        // 3.75. driver rumble when attempting to drive against active limelight corrections
         if (aimAssistEnabledFunction.get()) {
             if (DriverStation.isFMSAttached()) {
                 if (!(DriverStation.getMatchTime() >= 28.0 && DriverStation.getMatchTime() <= 33.0)) {

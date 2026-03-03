@@ -23,6 +23,19 @@ public final class Constants {
         // MAKE SURE TO UPDATE OFFSETS WHEN WE HAVE THE ROBOT BUILT
     }
 
+    public final class LimelightConstants {
+        public static final double maxTurnSpeedRadiansPerSecond = 1.5;
+        public static final double turnSpeedPerDegree = 0.02;
+        public static final double xyCorrectionSpeedFactor = 0.3; // multiplied by the TeleOperated drive max speed
+        public static final double headingDeadbandDegrees = 2.5; // deadband for heading corrections in degrees
+
+        public static final double desiredHeading = 0.0;
+
+        // YOU WILL HAVE TO UPDATE THESE BASED ON THE MAGNETIC COMPASS DIRECTION OF THE FIELD AT COMPETITION
+        public static final double desiredHeadingForRedAlliance = 0.0;
+        public static final double desiredHeadingForBlueAlliance = 0.0;
+    }
+
     public final class ModuleConstants {
         public static final double kDriveEncoderRot2Meter = 0.148148148 * Math.PI * 0.1; // Drive motor gear ratio * PI * Robot wheel diameter (in meters)
         public static final double kTurnEncoderRot2Rad = 0.04666666 * Math.PI * 2; // Turn motor gear ratio converted to radians

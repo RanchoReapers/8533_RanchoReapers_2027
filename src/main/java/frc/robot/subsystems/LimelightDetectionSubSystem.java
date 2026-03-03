@@ -1,14 +1,16 @@
 package frc.robot.subsystems;
 
 import java.util.Optional;
-import frc.robot.RobotContainer;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.LimelightConstants;
 import frc.robot.LimelightHelpers;
+import frc.robot.RobotContainer;
 
 public class LimelightDetectionSubSystem extends SubsystemBase {
 
@@ -20,15 +22,8 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
     int currentPipeline = (int) LimelightHelpers.getCurrentPipelineIndex(""); // current pipeline index, 0 = AprilTag, 1 = Fuel
 
     double distanceOfTagToCameraMeters;
-
-    double desiredHeading = 0.0;
     double currentHeading;
     double headingError;
-    double maxTurnSpeed = 1.5;
-
-    double headingDeadband = 2.5;
-    double turnSpeedPerDegree = 0.02;       
-    double xyCorrectionSpeedFactor = 0.3;
 
     int primaryTargetID;
     boolean checkedAlly = false;
@@ -46,6 +41,8 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
     public double xSpeedBeforeLimelight;
     public double ySpeedBeforeLimelight;
     public double turningSpeedBeforeLimelight;
+
+    double desiredHeading = 0.0; // Dynamically set based on alliance color
 
     public LimelightDetectionSubSystem() {
 
@@ -88,12 +85,13 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
                 if (ally.get() == Alliance.Red) {
                     primaryTargetID = 10;
                     LimelightHelpers.setPriorityTagID("", 10);
-                    checkedAlly = true;
+                    desiredHeading = LimelightConstants.desiredHeadingForRedAlliance;
                 } else if (ally.get() == Alliance.Blue) {
                     primaryTargetID = 26;
                     LimelightHelpers.setPriorityTagID("", 26);
-                    checkedAlly = true;
+                    desiredHeading = MathUtil.inputModulus(LimelightConstants.desiredHeadingForRedAlliance + 180.0, 0.0, 360.0);
                 }
+                checkedAlly = true;
             } else {
                 primaryTargetID = 99999;
             }
@@ -101,8 +99,8 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
 
         if (currentPipeline == 0 && hasTarget == true && limelightOverrideActive == false && DriverStation.isTeleop() && checkForTagValidity() && distanceOfTagToCameraMeters <= 1.75) {
 
-            if (Math.abs(headingError) > headingDeadband) {
-                turnSpeedLimelight = MathUtil.clamp((turnSpeedPerDegree * headingError), -maxTurnSpeed, maxTurnSpeed);
+            if (Math.abs(headingError) > LimelightConstants.headingDeadbandDegrees && primaryTargetID != 99999) {
+                turnSpeedLimelight = MathUtil.clamp((LimelightConstants.turnSpeedPerDegree * headingError), -LimelightConstants.maxTurnSpeedRadiansPerSecond, LimelightConstants.maxTurnSpeedRadiansPerSecond);
                 // Pause x/y corrections until facing correct heading
                 xSpeedLimelight = 0;
                 ySpeedLimelight = 0;
@@ -115,10 +113,10 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
             // x corrections
             if (tagHorizontalOffsetDeg > 5) { // if we are too right (deadband 5 deg)
                 horizontalCorrectionActive = true;
-                xSpeedLimelight = -xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+                xSpeedLimelight = -LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
             } else if (tagHorizontalOffsetDeg < -5) { // if we are too left (deadband 5 deg)
                 horizontalCorrectionActive = true;
-                xSpeedLimelight = xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+                xSpeedLimelight = LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
             } else {
                 horizontalCorrectionActive = false;
                 xSpeedLimelight = 0;
@@ -127,10 +125,10 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
             // y corrections
             if (distanceOfTagToCameraMeters > 1.2 + 0.127) { // if we are too far (try to reach roughly 4 feet away from HUB apriltag) (deadband 5 inches (in meters))
                 depthCorrectionActive = true;
-                ySpeedLimelight = xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+                ySpeedLimelight = LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
             } else if (distanceOfTagToCameraMeters < 1.2 - 0.127) { // if we are too close (deadband 5 inches (in meters))
                 depthCorrectionActive = true;
-                ySpeedLimelight = -xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
+                ySpeedLimelight = -LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
             } else {
                 depthCorrectionActive = false;
                 ySpeedLimelight = 0;

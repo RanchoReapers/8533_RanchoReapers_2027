@@ -1,24 +1,6 @@
 package frc.robot.commands;
 
-import static frc.robot.generated.ChoreoTraj.BLUEBackOfHubToRightBump;
-import static frc.robot.generated.ChoreoTraj.BLUEBackofHubToLeftBump;
-import static frc.robot.generated.ChoreoTraj.BLUEHubToBackOfHub;
-import static frc.robot.generated.ChoreoTraj.BLUELeftBallsCollectionToHubViaBump;
-import static frc.robot.generated.ChoreoTraj.BLUELeftBallsCollectionToHubViaTrench;
-import static frc.robot.generated.ChoreoTraj.BLUELeftBumpToHub;
-import static frc.robot.generated.ChoreoTraj.BLUELeftBumpToLeftSideOfBalls;
-import static frc.robot.generated.ChoreoTraj.BLUELeftHubToBump;
-import static frc.robot.generated.ChoreoTraj.BLUELeftHubToLeftBallsCollectionViaBump;
-import static frc.robot.generated.ChoreoTraj.BLUELeftHubToLeftBallsCollectionViaTrench;
-import static frc.robot.generated.ChoreoTraj.BLUELeftTrenchToLeftSideOfBalls;
-import static frc.robot.generated.ChoreoTraj.BLUERightBallsCollectionToHubViaBump;
-import static frc.robot.generated.ChoreoTraj.BLUERightBallsCollectionToHubViaTrench;
-import static frc.robot.generated.ChoreoTraj.BLUERightBumpToHub;
-import static frc.robot.generated.ChoreoTraj.BLUERightBumpToRightSideOfBalls;
-import static frc.robot.generated.ChoreoTraj.BLUERightHubToBump;
-import static frc.robot.generated.ChoreoTraj.BLUERightHubToRightBallsCollectionViaBump;
-import static frc.robot.generated.ChoreoTraj.BLUERightHubToRightBallsCollectionViaTrench;
-import static frc.robot.generated.ChoreoTraj.BLUERightTrenchToRightSideOfBalls;
+import static frc.robot.generated.ChoreoTraj.*;
 
 import java.util.Set;
 
@@ -34,6 +16,7 @@ import frc.robot.subsystems.IntakeRetractorSubSystem;
 import frc.robot.subsystems.IntakeSubSystem;
 import frc.robot.subsystems.LimelightDetectionSubSystem;
 import frc.robot.subsystems.SwerveSubSystem;
+import frc.robot.subsystems.ShooterSubSystem;
 
 public final class Autos {
 
@@ -41,25 +24,25 @@ public final class Autos {
     private final IntakeSubSystem intakeSubsystem;
     private final IntakeRetractorSubSystem intakeRetractorSubsystem;
     private final LimelightDetectionSubSystem limelightDetectionSubsystem;
-    //UC//private final ShooterSubSystem shooterSubsystem;
+    private final ShooterSubSystem shooterSubsystem;
 
     private final AutoFactory autoFactory;
     private final AutoChooser autonomousProgramChooser;
 
-    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem, LimelightDetectionSubSystem limelightDetectionSubsystem/* , ShooterSubSystem shooterSubsystem*/) {
+    public Autos(SwerveSubSystem swerveSubSystem, IntakeSubSystem intakeSubsystem, IntakeRetractorSubSystem intakeRetractorSubsystem, LimelightDetectionSubSystem limelightDetectionSubsystem, ShooterSubSystem shooterSubsystem) {
         this.swerveSubSystem = swerveSubSystem;
         this.intakeSubsystem = intakeSubsystem;
         this.intakeRetractorSubsystem = intakeRetractorSubsystem;
         this.limelightDetectionSubsystem = limelightDetectionSubsystem;
-        //UC//this.shooterSubsystem = shooterSubsystem;
+        this.shooterSubsystem = shooterSubsystem;
 
         this.autoFactory = swerveSubSystem.createAutoFactory();
         this.autonomousProgramChooser = new AutoChooser();
 
-        //UC//autoFactory
-                //UC//.bind("activateIntake", intakeSubsystem.doIntakeCmd())
-                //UC//.bind("deactivateIntake", intakeSubsystem.stopIntakeCmd());
-        
+        autoFactory
+                .bind("activateIntake", intakeSubsystem.doIntakeCmd())
+                .bind("deactivateIntake", intakeSubsystem.stopIntakeCmd());
+
     }
 
     public void configureAutoChooser() {
@@ -78,7 +61,6 @@ public final class Autos {
         RobotModeTriggers.autonomous().whileTrue(autonomousProgramChooser.selectedCommandScheduler());
     }
 
-    /* UNCOMMENT AFTER ROBOT IS FULLY BUILT AND WIRED
     public void startShootingForPeriodOfTime(AutoTrajectory firstRoutine, AutoTrajectory routineToStartAfterShootingFinishes, int lowBallThreshold, double debounceTimeSeconds, double timeoutSeconds) {
         firstRoutine.done().onTrue(
                 Commands.defer(() -> {
@@ -90,10 +72,8 @@ public final class Autos {
                     debounceTimer.start();
 
                     return Commands.sequence(
-
                             // Start shooter once
                             shooterSubsystem.doShootCmd(),
-
                             // Wait until low balls (debounced) OR 5 sec timeout
                             Commands.waitUntil(() -> {
 
@@ -111,17 +91,14 @@ public final class Autos {
 
                                 return debouncedLowBalls || timeout;
                             }),
-
                             // If ended because of low balls → wait 1 extra second
                             Commands.either(
                                     Commands.waitSeconds(1.0),
                                     Commands.none(),
                                     () -> limelightDetectionSubsystem.getTargetCountLimelight() <= 2
                             ),
-
                             // Stop shooter
                             shooterSubsystem.stopShootCmd(),
-
                             // Starts next commands
                             routineToStartAfterShootingFinishes.cmd()
                     );
@@ -130,8 +107,6 @@ public final class Autos {
                 }, Set.of(shooterSubsystem))
         );
     }
-    */
-
 
     // COMPETITION AUTOS
     private AutoRoutine startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_Auto() {
@@ -146,7 +121,7 @@ public final class Autos {
         // When the routine begins, reset odometry and start the first trajectory 
         startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         trenchToBalls.resetOdometry(),
                         trenchToBalls.cmd()
                 )
@@ -154,7 +129,7 @@ public final class Autos {
 
         // start subsequent trajectories when the previous is done
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.0); 
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.0);
 
         return startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }
@@ -170,22 +145,22 @@ public final class Autos {
 
         startingFrom_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         bumpToHub.resetOdometry(),
                         bumpToHub.cmd()
                 )
         );
 
-        //UC//startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
         hubToBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
 
     private AutoRoutine startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_Auto() {
-        final AutoRoutine startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine = autoFactory.newRoutine("starting at LEFT BUMP performing SHOOT COLLECT SHOOT COLLECT");
+        final AutoRoutine startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine = autoFactory.newRoutine("starting at LEFT BUMP performing COLLECT SHOOT COLLECT");
 
         final AutoTrajectory bumpToBalls = BLUELeftBumpToLeftSideOfBalls.asAutoTraj(startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine);
         final AutoTrajectory ballsToHub = BLUELeftBallsCollectionToHubViaBump.asAutoTraj(startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine);
@@ -200,7 +175,7 @@ public final class Autos {
         );
 
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -215,16 +190,16 @@ public final class Autos {
         final AutoTrajectory hubToBalls = BLUELeftHubToLeftBallsCollectionViaBump.asAutoTraj(startingFrom_HUB_Via_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine);
         startingFrom_HUB_Via_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         hubToBackOfHub.resetOdometry(),
                         hubToBackOfHub.cmd()
                 )
         );
 
-        //UC//startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
         backOfHubToRightBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_HUB_Via_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -238,14 +213,14 @@ public final class Autos {
 
         startingFrom_RIGHT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         trenchToBalls.resetOdometry(),
                         trenchToBalls.cmd()
                 )
         );
 
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.5);
 
         return startingFrom_RIGHT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }
@@ -261,22 +236,22 @@ public final class Autos {
 
         startingFrom_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         bumpToHub.resetOdometry(),
                         bumpToHub.cmd()
                 )
         );
 
-        //UC//startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
         hubToBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
 
     private AutoRoutine startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_Auto() {
-        final AutoRoutine startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine = autoFactory.newRoutine("starting at RIGHT BUMP performing SHOOT COLLECT SHOOT COLLECT");
+        final AutoRoutine startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine = autoFactory.newRoutine("starting at RIGHT BUMP performing COLLECT SHOOT COLLECT");
 
         final AutoTrajectory bumpToBalls = BLUERightBumpToRightSideOfBalls.asAutoTraj(startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine);
         final AutoTrajectory ballsToHub = BLUERightBallsCollectionToHubViaBump.asAutoTraj(startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine);
@@ -284,14 +259,14 @@ public final class Autos {
 
         startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         bumpToBalls.resetOdometry(),
                         bumpToBalls.cmd()
                 )
         );
 
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -306,16 +281,16 @@ public final class Autos {
         final AutoTrajectory hubToBalls = BLUERightHubToRightBallsCollectionViaBump.asAutoTraj(startingFrom_HUB_Via_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine);
         startingFrom_HUB_Via_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine.active().onTrue(
                 Commands.sequence(
-                        //UC//intakeRetractorSubsystem.doIntakeRetractionCmd(),
+                        intakeRetractorSubsystem.doIntakeRetractionCmd(),
                         hubToBackOfHub.resetOdometry(),
                         hubToBackOfHub.cmd()
                 )
         );
 
-        //UC//startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
         backOfHubToRightBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        //UC//startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
 
         return startingFrom_HUB_Via_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
