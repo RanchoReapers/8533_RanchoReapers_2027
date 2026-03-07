@@ -75,11 +75,11 @@ public class ShooterSubSystem extends SubsystemBase {
     public void shooterControl() {
         if (shooterMotorsStopped == false) {
             if (DriverStation.isAutonomous()) {
-                shooterMotorLeft.setVoltage(2.25 * ShooterConstants.ShooterVoltage);
-                shooterMotorRight.setVoltage(2.25 * -ShooterConstants.ShooterVoltage * 0.8); // matches speed bc of different gear ratios
+                shooterMotorLeft.setVoltage(2.25 * -ShooterConstants.ShooterVoltage);
+                shooterMotorRight.setVoltage(2.25 * ShooterConstants.ShooterVoltage); // matches speed bc of different gear ratios
             } else {
                 shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage);
-                shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * -ShooterConstants.ShooterVoltage * 0.8);
+                shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage * 0.8);
                 // this may go the wrong direction, switch negatives if true
             }
         } else {
