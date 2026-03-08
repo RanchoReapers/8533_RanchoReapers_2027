@@ -199,6 +199,11 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
         SmartDashboard.putNumber("limelightDistanceOfTagToCameraMeters", distanceOfTagToCameraMeters);
         SmartDashboard.putNumber("limelightTargetCount", targetCount);
         SmartDashboard.putBoolean("limelightHasTarget", hasTarget);
+        if (currentPipeline == 1) {
+            SmartDashboard.putNumber("Balls Seen", targetCount);
+        } else {
+            SmartDashboard.putNumber("Balls Seen", 99999);
+        }
     }
 
 }

@@ -61,7 +61,7 @@ public final class Autos {
         RobotModeTriggers.autonomous().whileTrue(autonomousProgramChooser.selectedCommandScheduler());
     }
 
-    public void startShootingForPeriodOfTime(AutoTrajectory firstRoutine, AutoTrajectory routineToStartAfterShootingFinishes, int lowBallThreshold, double debounceTimeSeconds, double timeoutSeconds) {
+    public void startShootingForPeriodOfTime(AutoTrajectory firstRoutine, AutoTrajectory routineToStartAfterShootingFinishes, int lowBallThreshold, double debounceTimeSeconds, double timeoutSeconds, boolean bypassLimelight) {
         firstRoutine.done().onTrue(
                 Commands.defer(() -> {
 
@@ -77,25 +77,29 @@ public final class Autos {
                             // Wait until low balls (debounced) OR 5 sec timeout
                             Commands.waitUntil(() -> {
 
-                                int count = limelightDetectionSubsystem.getTargetCountLimelight();
+                                boolean debouncedLowBalls;
 
-                                if (count > 2) {
-                                    debounceTimer.restart();
+                                if (!bypassLimelight) {
+                                    int count = limelightDetectionSubsystem.getTargetCountLimelight();
+
+                                    if (count > 2) {
+                                        debounceTimer.restart();
+                                    }
+
+                                    debouncedLowBalls = count <= 2 && debounceTimer.hasElapsed(0.2);
+
+                                } else {
+                                    debouncedLowBalls = false;
                                 }
 
-                                boolean debouncedLowBalls
-                                        = count <= 2 && debounceTimer.hasElapsed(0.2);
-
-                                boolean timeout
-                                        = shootTimer.hasElapsed(5.0);
-
+                                boolean timeout = shootTimer.hasElapsed(5.0);
                                 return debouncedLowBalls || timeout;
                             }),
                             // If ended because of low balls → wait 1 extra second
                             Commands.either(
                                     Commands.waitSeconds(1.0),
                                     Commands.none(),
-                                    () -> limelightDetectionSubsystem.getTargetCountLimelight() <= 2
+                                    () -> checkLimelightBypassStatusForCommandSwitcher(bypassLimelight)
                             ),
                             // Stop shooter
                             shooterSubsystem.stopShootCmd(),
@@ -106,6 +110,14 @@ public final class Autos {
                     // requirements
                 }, Set.of(shooterSubsystem))
         );
+    }
+
+    private boolean checkLimelightBypassStatusForCommandSwitcher(boolean bypassLimelight) {
+        if (!bypassLimelight) {
+            return limelightDetectionSubsystem.getTargetCountLimelight() <= 2;
+        } else {
+            return false;
+        }
     }
 
     // COMPETITION AUTOS
@@ -129,7 +141,7 @@ public final class Autos {
 
         // start subsequent trajectories when the previous is done
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.0);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.0, true);
 
         return startingFrom_LEFT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }
@@ -151,10 +163,10 @@ public final class Autos {
                 )
         );
 
-        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5, true);
         hubToBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -175,7 +187,7 @@ public final class Autos {
         );
 
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_LEFT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -196,10 +208,10 @@ public final class Autos {
                 )
         );
 
-        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5, true);
         backOfHubToRightBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_HUB_Via_LEFT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -220,7 +232,7 @@ public final class Autos {
         );
 
         trenchToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5.5, true);
 
         return startingFrom_RIGHT_TRENCH_Performing_COLLECT_SHOOT_READYTOCOLLECT_AutoRoutine;
     }
@@ -242,10 +254,10 @@ public final class Autos {
                 )
         );
 
-        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(bumpToHub, hubToBump, 2, 0.2, 2.5, true);
         hubToBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -266,7 +278,7 @@ public final class Autos {
         );
 
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_RIGHT_BUMP_Performing_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
@@ -287,10 +299,10 @@ public final class Autos {
                 )
         );
 
-        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5);
+        startShootingForPeriodOfTime(hubToBackOfHub, backOfHubToRightBump, 2, 0.2, 2.5, true);
         backOfHubToRightBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
-        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5);
+        startShootingForPeriodOfTime(ballsToHub, hubToBalls, 2, 0.2, 5, true);
 
         return startingFrom_HUB_Via_RIGHT_BUMP_Performing_SHOOT_COLLECT_SHOOT_COLLECT_AutoRoutine;
     }
