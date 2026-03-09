@@ -8,7 +8,7 @@ import edu.wpi.first.math.util.Units;
 public final class Constants {
 
     public final class IntakeConstants {
-        public static final double IntakeVoltage = 4.4;
+        public static final double IntakeVoltage = 3.4;
     }
     
     public final class ShooterConstants {

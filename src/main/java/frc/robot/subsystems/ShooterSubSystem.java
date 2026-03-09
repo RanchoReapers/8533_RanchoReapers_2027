@@ -3,7 +3,7 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.DriverStation;
-
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -20,6 +20,10 @@ public class ShooterSubSystem extends SubsystemBase {
 
     SparkMaxConfig sparkConfigshooterMotorLeft;
     SparkMaxConfig sparkConfigshooterMotorRight;
+
+    Timer shootTimer = new Timer();
+    boolean hasSpunUp = false;
+    boolean timerHasReset = false;
 
     public ShooterSubSystem(int shooterLeftCANId, int shooterRightCANId) {
         shooterMotorLeft = new SparkMax(shooterLeftCANId, SparkMax.MotorType.kBrushless);
@@ -42,9 +46,12 @@ public class ShooterSubSystem extends SubsystemBase {
                 .velocityConversionFactor(0.3333);
         sparkConfigshooterMotorRight.smartCurrentLimit(40, 40);
 
-        shooterMotorLeft.configure(sparkConfigshooterMotorLeft, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
-        shooterMotorRight.configure(sparkConfigshooterMotorRight, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
-        // MAKE SURE TO UPDATE THE POSITION & VELOCITY CONVERSION FACTORS WHEN WE KNOW THE GEAR RATIOS
+        shooterMotorLeft.configure(sparkConfigshooterMotorLeft, com.revrobotics.ResetMode.kResetSafeParameters,
+                com.revrobotics.PersistMode.kPersistParameters);
+        shooterMotorRight.configure(sparkConfigshooterMotorRight, com.revrobotics.ResetMode.kResetSafeParameters,
+                com.revrobotics.PersistMode.kPersistParameters);
+        // MAKE SURE TO UPDATE THE POSITION & VELOCITY CONVERSION FACTORS WHEN WE KNOW
+        // THE GEAR RATIOS
     }
 
     public Command doShootCmd() {
@@ -75,14 +82,57 @@ public class ShooterSubSystem extends SubsystemBase {
     public void shooterControl() {
         if (shooterMotorsStopped == false) {
             if (DriverStation.isAutonomous()) {
-                shooterMotorLeft.setVoltage(2.25 * -ShooterConstants.ShooterVoltage);
-                shooterMotorRight.setVoltage(2.25 * ShooterConstants.ShooterVoltage); // matches speed bc of different gear ratios
+                if (hasSpunUp) {
+                    shooterMotorLeft.setVoltage(2.25 * -ShooterConstants.ShooterVoltage);
+                    shooterMotorRight.setVoltage(2.25 * ShooterConstants.ShooterVoltage * 0.08);
+                } else {
+                    if (timerHasReset) {
+                        shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                                * ShooterConstants.ShooterVoltage);
+
+                        if (shootTimer.hasElapsed(0.3)) {
+                            shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                                    * ShooterConstants.ShooterVoltage * 0.08);
+                            hasSpunUp = true;
+                        }
+
+                    } else {
+                        shootTimer.reset();
+                        shootTimer.start();
+                        timerHasReset = true;
+
+                    }
+
+                }
             } else {
-                shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage);
-                shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage * 0.8);
-                // this may go the wrong direction, switch negatives if true
+                if (hasSpunUp) {
+                    shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                            * ShooterConstants.ShooterVoltage);
+                    shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                            * ShooterConstants.ShooterVoltage * 0.08);
+                } else {
+                    if (timerHasReset) {
+                        shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                                * ShooterConstants.ShooterVoltage);
+
+                        if (shootTimer.hasElapsed(0.3)) {
+                            shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
+                                    * ShooterConstants.ShooterVoltage * 0.08);
+                            hasSpunUp = true;
+                        }
+
+                    } else {
+                        shootTimer.reset();
+                        shootTimer.start();
+                        timerHasReset = true;
+
+                    }
+
+                }
             }
         } else {
+            hasSpunUp = false;
+            timerHasReset = false;
             endShooterMotors();
         }
     }
