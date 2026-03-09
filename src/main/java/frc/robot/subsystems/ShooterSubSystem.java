@@ -106,21 +106,15 @@ public class ShooterSubSystem extends SubsystemBase {
                 }
             } else {
                 if (hasSpunUp) {
-                    shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
-                            * ShooterConstants.ShooterVoltage);
-                    shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
-                            * ShooterConstants.ShooterVoltage * 0.08);
+                    shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage);
+                    shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage * 0.08);
                 } else {
                     if (timerHasReset) {
-                        shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
-                                * ShooterConstants.ShooterVoltage);
-
+                        shooterMotorLeft.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage);
                         if (shootTimer.hasElapsed(0.3)) {
-                            shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25
-                                    * ShooterConstants.ShooterVoltage * 0.08);
+                            shooterMotorRight.setVoltage(RobotContainer.operatorController.getRightTriggerAxis() * 2.25 * ShooterConstants.ShooterVoltage * 0.08);
                             hasSpunUp = true;
                         }
-
                     } else {
                         shootTimer.reset();
                         shootTimer.start();
