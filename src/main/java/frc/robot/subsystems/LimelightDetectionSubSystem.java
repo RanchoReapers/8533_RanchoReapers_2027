@@ -24,6 +24,7 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
     double distanceOfTagToCameraMeters;
     double currentHeading;
     double headingError;
+    double idealDistanceFromTag = 1.31; // in meters
 
     int primaryTargetID;
     boolean checkedAlly = false;
@@ -123,10 +124,10 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
             }
 
             // y corrections
-            if (distanceOfTagToCameraMeters > 1.31 + 0.127) { // if we are too far (try to reach roughly 4 feet away from HUB apriltag) (deadband 5 inches (in meters))
+            if (distanceOfTagToCameraMeters > idealDistanceFromTag + 0.127) { // if we are too far (try to reach roughly 4 feet away from HUB apriltag) (deadband 5 inches (in meters))
                 depthCorrectionActive = true;
                 ySpeedLimelight = LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
-            } else if (distanceOfTagToCameraMeters < 1.31 - 0.127) { // if we are too close (deadband 5 inches (in meters))
+            } else if (distanceOfTagToCameraMeters < idealDistanceFromTag - 0.127) { // if we are too close (deadband 5 inches (in meters))
                 depthCorrectionActive = true;
                 ySpeedLimelight = -LimelightConstants.xyCorrectionSpeedFactor * DriveConstants.kTeleDriveMaxSpeedMetersPerSecond;
             } else {
@@ -203,6 +204,17 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
             SmartDashboard.putNumber("Balls Seen", targetCount);
         } else {
             SmartDashboard.putNumber("Balls Seen", 99999);
+        }
+        if (checkForTagValidity()) {
+            if (distanceOfTagToCameraMeters > idealDistanceFromTag + 0.127) {
+                SmartDashboard.putString("Distance From Hub Alignment", "GO CLOSER");
+            } else if (distanceOfTagToCameraMeters < idealDistanceFromTag - 0.127) {
+                SmartDashboard.putString("Distance From Hub Alignment", "BACK UP");
+            } else {
+                SmartDashboard.putString("Distance From Hub Alignment", "ALIGNED");
+            }
+        } else {
+            SmartDashboard.putString("Distance From Hub Alignment", "NOT AT HUB");
         }
     }
 
