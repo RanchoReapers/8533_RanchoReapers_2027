@@ -26,7 +26,7 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
     double distanceOfTagToCameraMeters;
     double currentHeading;
     double headingError;
-    double idealDistanceFromTag = 1.31; // in meters
+    double idealDistanceFromTag = 2.154; // in meters
 
     int primaryTargetID;
     boolean checkedAlly = false;
@@ -51,7 +51,7 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
 
         if (DriverStation.isAutonomous()) {
             LimelightHelpers.setPipelineIndex("limelight", 1);
-        } else if (DriverStation.isTeleop()) {
+        } else {
             LimelightHelpers.setPipelineIndex("limelight", 0);
         }
 
@@ -65,7 +65,7 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
         targetCount = LimelightHelpers.getTargetCount("limelight");
         primaryVisibleTagID = LimelightHelpers.getFiducialID("limelight");
         currentPipeline = (int) LimelightHelpers.getCurrentPipelineIndex("limelight");
-
+        
         if (LimelightHelpers.getRawFiducials("limelight").length > 0) {
             distanceOfTagToCameraMeters = LimelightHelpers.getRawFiducials("limelight")[0].distToCamera;
         }
@@ -101,7 +101,6 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
         }
 
         if (currentPipeline == 0 && hasTarget == true && limelightOverrideActive == false && DriverStation.isTeleop() && checkForTagValidity() && distanceOfTagToCameraMeters <= 1.75) {
-            System.out.println("test1");
             if (Math.abs(headingError) > LimelightConstants.headingDeadbandDegrees && primaryTargetID != 99999) {
                 turnSpeedLimelight = MathUtil.clamp((LimelightConstants.turnSpeedPerDegree * headingError), -LimelightConstants.maxTurnSpeedRadiansPerSecond, LimelightConstants.maxTurnSpeedRadiansPerSecond);
                 // Pause x/y corrections until facing correct heading
@@ -187,7 +186,7 @@ public class LimelightDetectionSubSystem extends SubsystemBase {
         }
     }
 
-    public void periodicOdometry() {
+    public void periodic() {
         updateLimelightData();
         SmartDashboard.putNumber("limelightHorizontalOffsetFromTag", tagHorizontalOffsetDeg);
         SmartDashboard.putNumber("limelightVerticalOffsetFromTag", tagVerticalOffsetDeg);

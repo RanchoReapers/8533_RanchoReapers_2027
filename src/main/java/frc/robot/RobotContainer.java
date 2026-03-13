@@ -69,7 +69,6 @@ public class RobotContainer {
         shooterSubsystem.setDefaultCommand(new ShooterCmd(shooterSubsystem));
 
         xboxRTButtonTriggerDriver.debounce(0.1).whileTrue(callDoIntakeUnstuck()).onFalse(callIntakeUnstuckTriggerReleased());
-
     }
 
     public final Command callDoIntake() {
@@ -111,7 +110,16 @@ public class RobotContainer {
     public void disabledPeriodic() {
         swerveSubsystem.periodic();
         swerveSubsystem.disabledPeriodic();
-        limelightDetectionSubsystem.periodicOdometry();
+        limelightDetectionSubsystem.periodic();
+        shooterSubsystem.shooterPeriodic();
+        intakeSubsystem.intakePeriodic();
+        intakeRetractorSubsystem.intakeRetractorPeriodic();
+    }
+
+    public void robotPeriodic() {
+        swerveSubsystem.periodic();
+        swerveSubsystem.disabledPeriodic();
+        limelightDetectionSubsystem.periodic();
         shooterSubsystem.shooterPeriodic();
         intakeSubsystem.intakePeriodic();
         intakeRetractorSubsystem.intakeRetractorPeriodic();
