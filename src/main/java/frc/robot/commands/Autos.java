@@ -237,7 +237,7 @@ public final class Autos {
                 )
         );
 
-        hubToBackOfHub.doneDelayed(2.5).onTrue(backOfHubToRightBump.cmd()); // shooting happens during delay
+        hubToBackOfHub.doneDelayed(8).onTrue(backOfHubToRightBump.cmd()); // shooting happens during delay
         backOfHubToRightBump.done().onTrue(bumpToBalls.cmd());
         bumpToBalls.done().onTrue(ballsToHub.cmd());
         ballsToHub.doneDelayed(5).onTrue(hubToBalls.cmd()); // shooting happens during delay

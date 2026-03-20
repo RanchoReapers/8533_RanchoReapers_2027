@@ -18,7 +18,7 @@ public final class Constants {
 
     public final class IntakeRetractorConstants {
 
-        public static final double IntakeRetractorVoltage = 1.3;
+        public static final double IntakeRetractorVoltage = 2;
 
         public static final double IntakeRetractorAbsoluteEncoderOffsetRad = 0.227051;
         // MAKE SURE TO UPDATE OFFSETS WHEN WE HAVE THE ROBOT BUILT
@@ -105,7 +105,7 @@ public final class Constants {
         // TELEOP SPEED
         // if need faster try bump to 0.85x & /3 -> test with bumper change first
         public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond / 1.5;
-        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 4.0;
+        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 2.7;
 
         public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 3;
         public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 3;
