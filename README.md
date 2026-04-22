@@ -1,4 +1,4 @@
-# FRC 2027 — REBUILT
+# FRC 2027
 Team 8533 — Rancho Reapers
 
 # LED Colors
